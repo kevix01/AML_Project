@@ -15,7 +15,7 @@ class SD15Model(DiffusionModel):
         # Ottimizzazioni consigliate
         self.pipe.enable_xformers_memory_efficient_attention()
         self.pipe.vae.enable_slicing()
-        self.pipe.vae.enable_tailing()
+        self.pipe.vae.enable_tiling()
         self.pipe.unet.enable_gradient_checkpointing()
         # Congela i pesi
         for comp in [self.pipe.unet, self.pipe.vae, self.pipe.text_encoder]:
@@ -32,9 +32,8 @@ class SD15Model(DiffusionModel):
 
     def encode_image(self, image_tensor):
         # image_tensor: [B, C, H, W] in range [-1, 1]
-        with torch.no_grad():
-            latents = self.pipe.vae.encode(image_tensor).latent_dist.sample()
-            latents = latents * self.get_vae_scaling_factor()
+        latents = self.pipe.vae.encode(image_tensor).latent_dist.sample()
+        latents = latents * self.get_vae_scaling_factor()
         return latents
 
     def decode_latents(self, latents):

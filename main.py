@@ -42,7 +42,7 @@ if __name__ == "__main__":
         lr=0.01,
         alpha=5.0,
         beta=0.5,
-        t_samples=[150,400],
+        t_samples=[5, 10, 20, 40],
         image_size=512
     )
     adv_img.save("02_immagine_avversaria.png")

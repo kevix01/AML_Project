@@ -30,6 +30,9 @@ class AttackEngine:
         # Reference pass
         clean_sa, clean_ca = self.attack_strategy.reference_pass(img_tensor, prompt_embeds, t_samples)
 
+        print(f"{'Step':>6} | {'L_YOLO':>8} | {'L_SA':>8} | {'L_CA':>10}")
+        print("-" * 42)
+
         # Loop di ottimizzazione
         for step in range(num_steps):
             optimizer.zero_grad()
@@ -46,7 +49,7 @@ class AttackEngine:
             with torch.no_grad():
                 delta.clamp_(-epsilon, epsilon)
 
-            print(f"Step {step+1}/{num_steps} | L_YOLO: {l_task.item():.4f} | L_SA: {l_sa.item():.4f} | L_CA: {l_ca.item():.4f}")
+            print(f"{step + 1:6d} | {l_task.item():8.4f} | {l_sa.item():8.4f} | {l_ca.item():+10.4f}")
 
             gc.collect()
             torch.cuda.empty_cache()
