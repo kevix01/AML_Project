@@ -10,7 +10,7 @@ class DiffusionModel(ABC):
         self.vae_scaling_factor = None
 
     @abstractmethod
-    def load_pipeline(self, model_id, **kwargs):
+    def load_pipeline(self, model_id, hf_token, **kwargs):
         """Carica la pipeline e assegna self.pipe, self.scheduler."""
         pass
 

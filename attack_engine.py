@@ -10,12 +10,11 @@ class AttackEngine:
         self.diffusion_model = diffusion_model
         self.yolo_model = yolo_model
         self.attack_strategy = AttackStrategy(diffusion_model, yolo_model, hook_class)
+        self.loss_history = None
 
-    def run(self, image_path, text_prompt, num_steps=30, lr=0.02, alpha=2.0, beta=0.5,
-            t_samples=None, image_size=256, epsilon=16/255):
+    def run(self, image_path, text_prompt, t_samples, num_steps=30, lr=0.02, alpha=2.0, beta=0.5,
+            image_size=256, epsilon=16/255):
         # Preparazione immagine
-        if t_samples is None:
-            t_samples = [150, 400]
         target_size = self._prepare_size(image_size)
         init_image = Image.open(image_path).convert("RGB").resize(target_size)
         img_tensor = self._pil_to_tensor(init_image).to(self.diffusion_model.device)
@@ -29,6 +28,8 @@ class AttackEngine:
 
         # Reference pass
         clean_sa, clean_ca = self.attack_strategy.reference_pass(img_tensor, prompt_embeds, t_samples)
+
+        self.loss_history = {'total': [], 'yolo': [], 'sa': [], 'ca': []}
 
         print(f"{'Step':>6} | {'L_YOLO':>8} | {'L_SA':>8} | {'L_CA':>10}")
         print("-" * 42)
@@ -50,6 +51,11 @@ class AttackEngine:
                 delta.clamp_(-epsilon, epsilon)
 
             print(f"{step + 1:6d} | {l_task.item():8.4f} | {l_sa.item():8.4f} | {l_ca.item():+10.4f}")
+
+            self.loss_history['total'].append(total_loss.item())
+            self.loss_history['yolo'].append(l_task.item())
+            self.loss_history['sa'].append(l_sa.item())
+            self.loss_history['ca'].append(l_ca.item())
 
             gc.collect()
             torch.cuda.empty_cache()

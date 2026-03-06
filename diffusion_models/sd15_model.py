@@ -4,19 +4,25 @@ from diffusion_models.model_base import DiffusionModel
 
 
 class SD15Model(DiffusionModel):
-    def load_pipeline(self, model_id="runwayml/stable-diffusion-v1-5", **kwargs):
+    def load_pipeline(self, model_id="runwayml/stable-diffusion-v1-5", hf_token: str = None, **kwargs):
         self.pipe = StableDiffusionPipeline.from_pretrained(
             model_id,
             torch_dtype=self.dtype,
+            hf_token=hf_token,
             safety_checker=None,
             **kwargs
-        ).to(self.device)
+        )# .to(self.device) // disabilitato per offload modello
         self.scheduler = self.pipe.scheduler
-        # Ottimizzazioni consigliate
-        self.pipe.enable_xformers_memory_efficient_attention()
+        # Ottimizzazioni
+        if hasattr(self.pipe, 'enable_xformers_memory_efficient_attention'):
+            self.pipe.enable_xformers_memory_efficient_attention()
         self.pipe.vae.enable_slicing()
         self.pipe.vae.enable_tiling()
         self.pipe.unet.enable_gradient_checkpointing()
+
+        # Offload delle componenti del modello
+        self.pipe.enable_model_cpu_offload()
+
         # Congela i pesi
         for comp in [self.pipe.unet, self.pipe.vae, self.pipe.text_encoder]:
             for param in comp.parameters():

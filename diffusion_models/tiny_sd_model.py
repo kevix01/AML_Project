@@ -4,7 +4,7 @@ from diffusion_models.model_base import DiffusionModel
 
 
 class TinySDModel(DiffusionModel):
-    def load_pipeline(self, model_id="OFA-Sys/small-stable-diffusion-v0", **kwargs):
+    def load_pipeline(self, model_id="OFA-Sys/small-stable-diffusion-v0", hf_token: str = None, **kwargs):
         """
         Carica Tiny Stable Diffusion.
         Di default usa il modello small di OFA-Sys (solo 0.6B parametri).
@@ -13,18 +13,22 @@ class TinySDModel(DiffusionModel):
             model_id,
             torch_dtype=self.dtype,
             safety_checker=None,
+            hf_token=hf_token,
             requires_safety_checker=False,
             **kwargs
-        ).to(self.device)
+        )# .to(self.device) // disabilitato per offload modello
 
         self.scheduler = self.pipe.scheduler
 
         # Ottimizzazioni
         if hasattr(self.pipe, 'enable_xformers_memory_efficient_attention'):
             self.pipe.enable_xformers_memory_efficient_attention()
-
         self.pipe.vae.enable_slicing()
         self.pipe.vae.enable_tiling()
+        self.pipe.unet.enable_gradient_checkpointing()
+
+        # Offload delle componenti del modello
+        self.pipe.enable_model_cpu_offload()
 
         # Congela i pesi
         for component in [self.pipe.unet, self.pipe.vae, self.pipe.text_encoder]:

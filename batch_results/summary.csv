@@ -1,0 +1,10 @@
+diffusion,yolo,orig_count,adv_count,success,reduction
+sd15,yolov8n,6,0,True,6
+sd15,yolo11n,5,0,True,5
+sd15,yolo26n,5,0,True,5
+tiny_sd,yolov8n,6,0,True,6
+tiny_sd,yolo11n,5,0,True,5
+tiny_sd,yolo26n,5,0,True,5
+vega,yolov8n,6,0,True,6
+vega,yolo11n,5,0,True,5
+vega,yolo26n,5,0,True,5
